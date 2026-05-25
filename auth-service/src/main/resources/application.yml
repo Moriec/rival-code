@@ -1,0 +1,40 @@
+server:
+  port: 8081
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: true
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rivals
+    username: rivals
+    password: rivals
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: auth
+  flyway:
+    enabled: true
+    schemas: auth
+    locations: classpath:db/migration
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: avatars
+
+jwt:
+  access-token-expiration-seconds: 900
+  refresh-token-expiration-seconds: 2592000
+  issuer: rivalcode-auth
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.rivalcode: DEBUG

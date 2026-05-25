@@ -1,11 +1,9 @@
-
 services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     ports:
       - "9092:9092"
     environment:
-      # KRaft mode configuration
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
@@ -18,7 +16,6 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      # Cluster ID is required for KRaft
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
 
   online-judge:
@@ -54,6 +51,68 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       APP_KAFKA_SUBMISSION_TOPIC: submissions
     restart: on-failure
+
+  # ========== Auth Service dependencies ==========
+  postgres-auth:
+    image: postgres:17
+    container_name: auth-postgres
+    environment:
+      POSTGRES_DB: rivals
+      POSTGRES_USER: rivals
+      POSTGRES_PASSWORD: rivals
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rivals -d rivals"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: auth-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: auth-service
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/rivals
+      SPRING_DATASOURCE_USERNAME: rivals
+      SPRING_DATASOURCE_PASSWORD: rivals
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: avatars
+    ports:
+      - "8081:8081"
+    restart: always
+
+volumes:
+  pgdata:
+  minio_data:
 
 networks:
   default:
