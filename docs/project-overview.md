@@ -80,8 +80,7 @@ Gateway отвечает за маршрутизацию, CORS, базовые �
 |---|---|---|
 | HTTP | Gateway и публичные/internal API сервисов | Запросы клиента и синхронные internal calls. |
 | WebSocket | `duel-service` | Live-комнаты дуэлей и code snapshots. |
-| Kafka | `submission-service`, `online-judge`, `duel-service` | Проверка кода и доменные события. |
-| RabbitMQ | `duel-service`, `notification-service` | Пользовательские уведомления. |
+| Kafka | `submission-service`, `online-judge`, `duel-service`, `notification-service` | Проверка кода, доменные события и команды уведомлений. |
 | PostgreSQL | Доменные сервисы | Основное долговременное хранение. |
 | Redis | Gateway/problem/duel/submission/notification опционально | Rate limit, cache, matchmaking, presence, live state. |
 | Object Storage | Auth/problem/submission опционально | Аватары, assets задач, архивы тестов, judge logs. |
@@ -93,8 +92,7 @@ Gateway отвечает за маршрутизацию, CORS, базовые �
 - Каждый микросервис владеет своей БД или schema.
 - Один сервис не читает таблицы другого сервиса напрямую.
 - Внешние ID в DTO остаются строками, но в БД их удобно хранить как `uuid`.
-- Kafka используется для judge/domain events.
-- RabbitMQ используется для пользовательских уведомлений.
+- Kafka используется для judge/domain events и пользовательских уведомлений.
 - `online-judge` не имеет публичного пользовательского API.
 - `auth-service` не знает про рейтинг, дуэли, задачи и submissions.
 - `problem-service` не знает про матчмейкинг, рейтинг и историю решений.
@@ -126,7 +124,7 @@ Gateway отвечает за маршрутизацию, CORS, базовые �
   -> submission-service
   -> Kafka submission-events.v1
   -> duel-service
-  -> RabbitMQ notifications.topic
+  -> Kafka notification-commands.v1
   -> notification-service
   -> пользователь видит verdict, итог дуэли и уведомления
 ```
@@ -159,4 +157,4 @@ Worker без публичного API. Получает `ComputingTask`, ком
 
 ### `notification-service`
 
-Сервис inbox-уведомлений. Принимает `NotificationCommand` из RabbitMQ, сохраняет уведомления, отдает список уведомлений пользователю, помечает их прочитанными и может стримить live-события через SSE/WebSocket. Не принимает доменных решений, только доставляет уже сформированные сообщения.
+Сервис inbox-уведомлений. Принимает `NotificationCommand` из Kafka topic `notification-commands.v1`, сохраняет уведомления, отдает список уведомлений пользователю, помечает их прочитанными и может стримить live-события через SSE/WebSocket. Не принимает доменных решений, только доставляет уже сформированные сообщения.

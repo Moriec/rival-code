@@ -13,10 +13,10 @@
 | `gateway-service` | единая точка входа, маршрутизация, CORS, rate limit, auth propagation | HTTP |
 | `auth-service` | регистрация, вход, refresh, профиль, аватар, роли | HTTP |
 | `problem-service` | архив задач, условия, теги, версии, лимиты, test manifests | HTTP |
-| `duel-service` | матчмейкинг, дуэли, рейтинг, лидерборд, WebSocket-комнаты | HTTP, WebSocket, Kafka, RabbitMQ |
+| `duel-service` | матчмейкинг, дуэли, рейтинг, лидерборд, WebSocket-комнаты | HTTP, WebSocket, Kafka |
 | `submission-service` | создание submissions, orchestration judge, хранение verdict | HTTP, Kafka |
 | `online-judge` | sandbox-компиляция и запуск пользовательского кода | Kafka |
-| `notification-service` | inbox уведомлений, read-status, live notification stream | HTTP, RabbitMQ |
+| `notification-service` | inbox уведомлений, read-status, live notification stream | HTTP, Kafka |
 
 Ключевой end-to-end поток:
 
@@ -30,7 +30,7 @@ client
   -> submission-service
   -> Kafka topic submission-events.v1
   -> duel-service
-  -> RabbitMQ notifications.topic
+  -> Kafka topic notification-commands.v1
   -> notification-service
 ```
 
@@ -176,16 +176,17 @@ Recommended STOMP routes:
 |---|---|---|---|
 | consume | `submission-events.v1` | `duelId` or `submissionId` | `EventEnvelope<SubmissionEvaluatedEvent>` |
 | produce | `duel-events.v1` | `duelId` | `EventEnvelope<DuelFinishedEvent>` |
+| produce | `notification-commands.v1` | `userId` | `NotificationCommand` |
 
-### RabbitMQ
+### Kafka Notification Commands
 
-`duel-service` публикует команды уведомлений в exchange `notifications.topic`.
+`duel-service` публикует команды уведомлений в Kafka topic `notification-commands.v1`. Key сообщения должен быть `userId`, чтобы уведомления одного пользователя сохраняли порядок внутри partition.
 
-| Routing key | Payload | Когда |
+| Key | Payload | Когда |
 |---|---|---|
-| `user.{userId}.match-found` | `NotificationCommand` | соперник найден |
-| `user.{userId}.duel-finished` | `NotificationCommand` | дуэль завершена |
-| `user.{userId}.rating-changed` | `NotificationCommand` | рейтинг изменился |
+| `userId` | `NotificationCommand` с type `MATCH_FOUND` | соперник найден |
+| `userId` | `NotificationCommand` с type `DUEL_FINISHED` | дуэль завершена |
+| `userId` | `NotificationCommand` с type `RATING_CHANGED` | рейтинг изменился |
 
 ### Internal Flow
 
@@ -264,20 +265,20 @@ Recommended STOMP routes:
 
 `notification-service` отвечает за inbox уведомлений, статус прочтения и доставку live notification stream.
 
-### RabbitMQ
+### Kafka
 
-| Exchange | Type | Payload |
-|---|---|---|
-| `notifications.topic` | topic | `NotificationCommand` |
+| Topic | Consumer group | Key | Payload |
+|---|---|---|---|
+| `notification-commands.v1` | `notification-service` | `userId` | `NotificationCommand` |
 
-Routing keys:
+Command types:
 
-| Routing key | Смысл |
+| Type | Смысл |
 |---|---|
-| `user.{userId}.match-found` | найден соперник |
-| `user.{userId}.duel-finished` | дуэль завершена |
-| `user.{userId}.rating-changed` | изменился рейтинг |
-| `user.{userId}.practice-judged` | practice submission проверен |
+| `MATCH_FOUND` | найден соперник |
+| `DUEL_FINISHED` | дуэль завершена |
+| `RATING_CHANGED` | изменился рейтинг |
+| `PRACTICE_JUDGED` | practice submission проверен |
 
 ### HTTP API
 
@@ -291,7 +292,8 @@ Routing keys:
 
 - `NotificationCommand` — команда создать уведомление.
 - `NotificationDto` — read-model для клиента.
-- Consumer должен использовать acknowledgements и не терять сообщение до сохранения notification в БД.
+- Consumer должен коммитить Kafka offset только после сохранения notification в БД.
+- Для защиты от повторной доставки нужен idempotency key: `notificationId`, `eventId` или вычисленный hash команды.
 
 ## Event And Data Rules
 
@@ -303,6 +305,7 @@ Routing keys:
 | `submission-results` | `online-judge` | `submission-service` | `submissionId` | `JudgeResult` |
 | `submission-events.v1` | `submission-service` | `duel-service` | `duelId` or `submissionId` | `EventEnvelope<SubmissionEvaluatedEvent>` |
 | `duel-events.v1` | `duel-service` | analytics/future services | `duelId` | `EventEnvelope<DuelFinishedEvent>` |
+| `notification-commands.v1` | `duel-service`, `submission-service`, future services | `notification-service` | `userId` | `NotificationCommand` |
 
 ### Envelope
 

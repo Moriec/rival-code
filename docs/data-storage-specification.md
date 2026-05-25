@@ -10,9 +10,9 @@
 
 - Каждый микросервис владеет своей БД или своим schema. Остальные сервисы не читают и не пишут в эти таблицы напрямую.
 - Между БД разных сервисов не создаются foreign key. Поля `user_id`, `problem_id`, `duel_id`, `submission_id` в чужих сервисах являются ссылками по значению.
-- Синхронизация между сервисами идет через HTTP internal API, Kafka domain events и RabbitMQ notification commands.
+- Синхронизация между сервисами идет через HTTP internal API, Kafka domain events и Kafka notification commands.
 - Для доменных событий используется outbox-table в сервисе-владельце события.
-- Kafka и RabbitMQ не считаются долговременным хранилищем бизнес-данных.
+- Kafka не считается долговременным хранилищем бизнес-данных.
 
 ### Типы данных
 
@@ -27,7 +27,7 @@
 
 ### Стандартная outbox table
 
-Таблица нужна в сервисах, которые публикуют Kafka/RabbitMQ события из транзакции с изменением доменных данных.
+Таблица нужна в сервисах, которые публикуют Kafka-события из транзакции с изменением доменных данных.
 
 | Column | Type | Required | Описание |
 |---|---|---|---|
@@ -589,9 +589,9 @@ Read-model для `UserDuelProfileDto` и leaderboard. Это данные duel-
 | Event | Transport | Payload |
 |---|---|---|
 | `DUEL_FINISHED` | Kafka `duel-events.v1` | `EventEnvelope<DuelFinishedEvent>` |
-| `MATCH_FOUND` | RabbitMQ `notifications.topic` | `NotificationCommand` |
-| `DUEL_FINISHED_NOTIFICATION` | RabbitMQ `notifications.topic` | `NotificationCommand` |
-| `RATING_CHANGED` | RabbitMQ `notifications.topic` | `NotificationCommand` |
+| `MATCH_FOUND` | Kafka `notification-commands.v1`, key `userId` | `NotificationCommand` |
+| `DUEL_FINISHED_NOTIFICATION` | Kafka `notification-commands.v1`, key `userId` | `NotificationCommand` |
+| `RATING_CHANGED` | Kafka `notification-commands.v1`, key `userId` | `NotificationCommand` |
 
 ### Redis Keys
 
@@ -781,7 +781,7 @@ Durable-БД в v1 не нужна.
 
 ## Notification Service
 
-`notification-service` владеет inbox пользователя: уведомления, статус прочтения, попытки доставки и idempotency обработки RabbitMQ commands.
+`notification-service` владеет inbox пользователя: уведомления, статус прочтения, попытки доставки и idempotency обработки Kafka commands из topic `notification-commands.v1`.
 
 Рекомендуемое хранилище:
 
@@ -836,13 +836,15 @@ Durable-БД в v1 не нужна.
 
 ### `processed_notification_commands`
 
-Idempotency table для RabbitMQ consumer.
+Idempotency table для Kafka consumer `notification-commands.v1`.
 
 | Column | Type | Required | Описание |
 |---|---|---|---|
-| `message_id` | `varchar(256)` | yes, PK | Message id из RabbitMQ headers или вычисленный hash. |
+| `command_id` | `varchar(256)` | yes, PK | `notificationId`, `eventId` или вычисленный hash команды. |
 | `notification_id` | `uuid` | no | Созданное уведомление. |
-| `routing_key` | `varchar(256)` | no | Routing key, например `user.{userId}.match-found`. |
+| `source_topic` | `varchar(128)` | no | Kafka topic, обычно `notification-commands.v1`. |
+| `source_partition` | `integer` | no | Kafka partition. |
+| `source_offset` | `bigint` | no | Kafka offset. |
 | `processed_at` | `timestamptz` | yes | Когда command обработан. |
 
 ### Redis Keys
