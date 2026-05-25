@@ -33,8 +33,14 @@ jwt:
   access-token-expiration-seconds: 900
   refresh-token-expiration-seconds: 2592000
   issuer: rivalcode-auth
+  access-secret: "ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg=="
+  refresh-secret: "OTQxMjM3YjVhM2YyNzQ3NTc2MjA1MjIyNTFiYjFiZDQxYTFlMzg4NTYyYmFhN2Y3MWRjMjYzYjQ5NTY3NTI5Mw=="
 
 logging:
   level:
+    root: INFO
     org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
     com.rivalcode: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"

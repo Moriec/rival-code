@@ -6,16 +6,20 @@ import com.rivalcode.contracts.users.model.UpdateProfileRequest;
 import com.rivalcode.contracts.users.model.UserProfileDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RequestMapping("/api/users")
 @Tag(name = "Профиль и аватары", description = "Получение/редактирование профиля, загрузка аватаров")
@@ -32,6 +36,24 @@ public interface UserApi {
             @ApiResponse(responseCode = "401", description = "Не авторизован")
     })
     UserProfileDto getMyProfile();
+
+    @GetMapping("/{userId}/profile")
+    @Operation(
+            summary = "Получить публичный профиль пользователя",
+            description = "Возвращает публичный профиль любого пользователя по его ID. Не требует аутентификации."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Публичный профиль",
+                    content = @Content(schema = @Schema(implementation = UserProfileDto.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = "{\"error\": \"User not found\"}")))
+    })
+    @SecurityRequirements({})
+    UserProfileDto getUserProfile(
+            @Parameter(description = "UUID пользователя", required = true, in = ParameterIn.PATH)
+            @PathVariable("userId") UUID userId
+    );
 
     @PatchMapping("/me")
     @Operation(

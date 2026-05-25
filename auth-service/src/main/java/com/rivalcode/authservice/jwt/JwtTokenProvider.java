@@ -5,11 +5,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,15 +26,19 @@ public class JwtTokenProvider {
     @Value("${jwt.issuer}")
     private String issuer;
 
-    private static final String ACCESS_SECRET_STRING = "dGhpc2lzYXNlY3JldGZvcmFjY2Vzc3Rva2VuMTIzNDU2Nzg5MGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6";
-    private static final String REFRESH_SECRET_STRING = "cmVmcmVzaHRva2Vuc2VjcmV0a2V5Zm9ycmVmcmVzaHRva2VuczEyMzQ1Njc4OTBhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5eg==";
+    @Value("${jwt.access-secret}")
+    private String accessSecretString;
 
-    private final SecretKey accessSecretKey;
-    private final SecretKey refreshSecretKey;
+    @Value("${jwt.refresh-secret}")
+    private String refreshSecretString;
 
-    public JwtTokenProvider() {
-        byte[] accessBytes = Base64.getDecoder().decode(ACCESS_SECRET_STRING);
-        byte[] refreshBytes = Base64.getDecoder().decode(REFRESH_SECRET_STRING);
+    private SecretKey accessSecretKey;
+    private SecretKey refreshSecretKey;
+
+    @PostConstruct
+    public void init() {
+        byte[] accessBytes = Base64.getDecoder().decode(accessSecretString);
+        byte[] refreshBytes = Base64.getDecoder().decode(refreshSecretString);
         this.accessSecretKey = Keys.hmacShaKeyFor(accessBytes);
         this.refreshSecretKey = Keys.hmacShaKeyFor(refreshBytes);
     }
