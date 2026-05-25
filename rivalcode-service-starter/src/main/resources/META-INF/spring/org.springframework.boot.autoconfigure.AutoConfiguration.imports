@@ -1,0 +1,3 @@
+com.rivalcode.starter.autoconfigure.RivalCodeServiceAutoConfiguration
+com.rivalcode.starter.autoconfigure.RivalCodeJacksonAutoConfiguration
+com.rivalcode.starter.autoconfigure.RivalCodeWebAutoConfiguration
