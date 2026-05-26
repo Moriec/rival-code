@@ -17,5 +17,6 @@ public class ComputingTask {
     private List<TestCase> testCases;
     private Long timeLimitMs;
     private Long memoryLimitKb;
+    private Long outputLimitBytes;
     private String customCheckerCode;
 }

@@ -1,10 +1,10 @@
 package com.rivalcode.onlinejudge.service;
 
-import com.rivalcode.contracts.submissionResult.enums.JudgeStatus;
+import com.rivalcode.onlinejudge.model.CheckResult;
 
 public interface Checker {
     /**
-     * Compares actual output with expected output.
+     * Checks solution output for a single test case.
      */
-    JudgeStatus check(String actual, String expected);
+    CheckResult check(String input, String expectedOutput, String actualOutput);
 }

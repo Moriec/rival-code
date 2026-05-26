@@ -8,6 +8,8 @@ import java.util.List;
 @Component
 public class JavaProfile implements LanguageProfile {
 
+    private static final long JVM_ADDRESS_SPACE_OVERHEAD_KB = 1024L * 1024L;
+
     @Override
     public ProgrammingLanguages language() {
         return ProgrammingLanguages.JAVA;
@@ -25,7 +27,14 @@ public class JavaProfile implements LanguageProfile {
 
     @Override
     public String[] compileCommand() {
-        return new String[]{"javac", "Main.java"};
+        return new String[]{
+                "/opt/java/openjdk/bin/javac",
+                "-J-Xmx512m",
+                "-J-Xss512k",
+                "-J-XX:+UseSerialGC",
+                "-J-XX:ActiveProcessorCount=2",
+                "Main.java"
+        };
     }
 
     @Override
@@ -39,7 +48,11 @@ public class JavaProfile implements LanguageProfile {
         return List.of(
                 "/opt/java/openjdk/bin/java",
                 "-Xmx" + heapMb + "m",
-                "-XX:CompressedClassSpaceSize=64m",
+                "-Xss512k",
+                "-XX:+UseSerialGC",
+                "-XX:ActiveProcessorCount=2",
+                "-XX:ReservedCodeCacheSize=32m",
+                "-XX:CompressedClassSpaceSize=16m",
                 "-XX:MaxMetaspaceSize=64m",
                 "-cp", "/box",
                 "Main"
@@ -47,8 +60,13 @@ public class JavaProfile implements LanguageProfile {
     }
 
     @Override
+    public long isolateMemoryLimitKb(long memoryLimitKb) {
+        return memoryLimitKb + JVM_ADDRESS_SPACE_OVERHEAD_KB;
+    }
+
+    @Override
     public boolean useIsolateMem() {
-        return false;
+        return true;
     }
 
     @Override

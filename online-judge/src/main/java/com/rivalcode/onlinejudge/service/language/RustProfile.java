@@ -25,7 +25,7 @@ public class RustProfile implements LanguageProfile {
 
     @Override
     public String[] compileCommand() {
-        return new String[]{"rustc", "-O", "solution.rs", "-o", "solution"};
+        return new String[]{"/usr/bin/rustc", "-O", "solution.rs", "-o", "solution", "-C", "linker=/usr/bin/gcc"};
     }
 
     @Override

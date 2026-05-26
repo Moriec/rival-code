@@ -8,6 +8,8 @@ import java.util.List;
 @Component
 public class JavaScriptProfile implements LanguageProfile {
 
+    private static final long NODE_ADDRESS_SPACE_OVERHEAD_KB = 512L * 1024L;
+
     @Override
     public ProgrammingLanguages language() {
         return ProgrammingLanguages.JAVASCRIPT;
@@ -40,8 +42,13 @@ public class JavaScriptProfile implements LanguageProfile {
     }
 
     @Override
+    public long isolateMemoryLimitKb(long memoryLimitKb) {
+        return memoryLimitKb + NODE_ADDRESS_SPACE_OVERHEAD_KB;
+    }
+
+    @Override
     public boolean useIsolateMem() {
-        return false;
+        return true;
     }
 
     @Override

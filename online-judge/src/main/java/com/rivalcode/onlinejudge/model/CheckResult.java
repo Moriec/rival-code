@@ -10,12 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExecutionResult {
-    private String stdout;
-    private String stderr;
-    private int exitCode;
-    private Long timeMs;
-    private Long memoryKb;
+public class CheckResult {
     private JudgeStatus status;
     private String message;
 }
