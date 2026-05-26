@@ -1,0 +1,48 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: problem-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/problem_db
+    username: problem_user
+    password: problem_pass
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: problem
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    schemas: problem
+    locations: classpath:db/migration
+    placeholder-replacement: false
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  assets-bucket: problem-assets
+  test-archives-bucket: problem-test-archives
+
+jwt:
+  access-token-secret: ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg==
+  issuer: rivalcode-auth
+
+rivalcode:
+  service:
+    name: problem-service
+    version: 1.0-SNAPSHOT
+
+logging:
+  level:
+    root: info
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    com.rivalcode: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+

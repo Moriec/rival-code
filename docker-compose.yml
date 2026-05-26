@@ -91,7 +91,7 @@ services:
   auth-service:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./auth-service/Dockerfile
     container_name: auth-service
     depends_on:
       postgres-auth:
@@ -112,9 +112,52 @@ services:
       - "8081:8081"
     restart: always
 
+  # ========== Problem Service dependencies ==========
+  postgres-problem:
+    image: postgres:17
+    container_name: problem-postgres
+    environment:
+      POSTGRES_DB: problem_db
+      POSTGRES_USER: problem_user
+      POSTGRES_PASSWORD: problem_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - problem_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U problem_user -d problem_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  problem-service:
+    build:
+      context: .
+      dockerfile: ./problem-service/Dockerfile
+    container_name: problem-service
+    depends_on:
+      postgres-problem:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-problem:5432/problem_db
+      SPRING_DATASOURCE_USERNAME: problem_user
+      SPRING_DATASOURCE_PASSWORD: problem_pass
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_ASSETS_BUCKET: problem-assets
+      MINIO_TEST_ARCHIVES_BUCKET: problem-test-archives
+      JWT_ACCESS_TOKEN_SECRET: "ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg=="
+    ports:
+      - "8082:8082"
+    restart: always
+
 volumes:
   pgdata:
   minio_data:
+  problem_pgdata:
 
 networks:
   default:
