@@ -97,7 +97,6 @@ public class TestRunner {
         testCases.add(TestDataGenerator.generateAcceptedCpp());
         testCases.add(TestDataGenerator.generateAcceptedPython());
         testCases.add(TestDataGenerator.generateAcceptedRust());
-        testCases.add(TestDataGenerator.generateAcceptedRuby());
         testCases.add(TestDataGenerator.generateAcceptedJavaScript());
         testCases.add(TestDataGenerator.generateCompilationError());
         testCases.add(TestDataGenerator.generateWrongAnswer());

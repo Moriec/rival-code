@@ -10,28 +10,27 @@ class StandardCheckerTest {
 
     @Test
     void shouldAcceptExactMatch() {
-        assertEquals(JudgeStatus.ACCEPTED, checker.check("42\n", "42"));
+        assertEquals(JudgeStatus.ACCEPTED, checker.check("", "42", "42\n").getStatus());
     }
 
     @Test
     void shouldAcceptWithDifferentTrailingWhitespace() {
-        assertEquals(JudgeStatus.ACCEPTED, checker.check("42  \n\n", "42"));
+        assertEquals(JudgeStatus.ACCEPTED, checker.check("", "42", "42  \n\n").getStatus());
     }
 
     @Test
     void shouldAcceptWithNormalizedInternalSpaces() {
-        // "1 2 3" vs "1   2 \n 3"
-        assertEquals(JudgeStatus.ACCEPTED, checker.check("1   2 \n 3", "1 2 3"));
+        assertEquals(JudgeStatus.ACCEPTED, checker.check("", "1 2 3", "1   2 \n 3").getStatus());
     }
 
     @Test
     void shouldRejectWrongAnswer() {
-        assertEquals(JudgeStatus.WRONG_ANSWER, checker.check("43", "42"));
+        assertEquals(JudgeStatus.WRONG_ANSWER, checker.check("", "42", "43").getStatus());
     }
 
     @Test
     void shouldHandleEmptyOutputs() {
-        assertEquals(JudgeStatus.ACCEPTED, checker.check("", ""));
-        assertEquals(JudgeStatus.WRONG_ANSWER, checker.check("something", ""));
+        assertEquals(JudgeStatus.ACCEPTED, checker.check("", "", "").getStatus());
+        assertEquals(JudgeStatus.WRONG_ANSWER, checker.check("", "", "something").getStatus());
     }
 }

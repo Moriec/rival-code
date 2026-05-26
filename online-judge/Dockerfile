@@ -21,9 +21,11 @@ FROM maven:3.9.6-eclipse-temurin-21 AS app-builder
 WORKDIR /build
 
 COPY contracts ./contracts
+COPY rivalcode-service-starter ./rivalcode-service-starter
 COPY online-judge ./online-judge
 
 RUN cd contracts && mvn clean install -DskipTests -q
+RUN cd rivalcode-service-starter && mvn clean install -DskipTests -q
 RUN cd online-judge && mvn clean package -DskipTests -q
 
 # --- Stage 3: Final Runtime Image ---

@@ -25,7 +25,7 @@ public class CppProfile implements LanguageProfile {
 
     @Override
     public String[] compileCommand() {
-        return new String[]{"g++", "-O3", "solution.cpp", "-o", "solution"};
+        return new String[]{"/usr/bin/g++", "-O3", "solution.cpp", "-o", "solution"};
     }
 
     @Override

@@ -11,6 +11,9 @@ public interface LanguageProfile {
     String[] compileCommand();
     String executableFileName();
     List<String> executionCommand(long memoryLimitKb);
+    default long isolateMemoryLimitKb(long memoryLimitKb) {
+        return memoryLimitKb;
+    }
     boolean useIsolateMem();
     int processLimit();
     List<String> extraDirMounts();

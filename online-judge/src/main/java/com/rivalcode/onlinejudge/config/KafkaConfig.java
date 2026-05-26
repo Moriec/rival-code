@@ -33,6 +33,7 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -49,7 +50,7 @@ public class KafkaConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         JsonDeserializer<ComputingTask> jsonDeserializer = new JsonDeserializer<>(ComputingTask.class, false);
-        jsonDeserializer.addTrustedPackages("*");
+        jsonDeserializer.addTrustedPackages("com.rivalcode.contracts.*");
 
         return new DefaultKafkaConsumerFactory<>(
                 props,
