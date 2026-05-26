@@ -140,6 +140,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-problem:5432/problem_db
       SPRING_DATASOURCE_USERNAME: problem_user
@@ -149,6 +151,7 @@ services:
       MINIO_SECRET_KEY: minioadmin
       MINIO_ASSETS_BUCKET: problem-assets
       MINIO_TEST_ARCHIVES_BUCKET: problem-test-archives
+      SPRING_DATA_REDIS_HOST: redis
       JWT_ACCESS_TOKEN_SECRET: "ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg=="
     ports:
       - "8082:8082"
@@ -168,6 +171,17 @@ services:
       - D:/minio_backup_data:/data
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
