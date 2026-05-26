@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ProblemTagRepository extends JpaRepository<ProblemTag, ProblemTag.ProblemTagId> {
 
     List<ProblemTag> findByProblem_ProblemId(UUID problemId);
+
+    void deleteByProblem_ProblemId(UUID problemId);
 }
