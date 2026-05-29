@@ -25,7 +25,7 @@ public class DuelProblemSelector {
 
     public DuelProblemSelectionResponse select(DuelProblemSelectionRequest request) {
         List<Problem> candidates = problemRepository.findAll().stream()
-                .filter(p -> p.getStatus().equals("PUBLISHED"))
+                .filter(p -> "PUBLISHED".equals(p.getStatus()))
                 .collect(Collectors.toList());
 
         // ЗАГОТОВКА: использование poolId и presetId из запроса

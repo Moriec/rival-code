@@ -188,32 +188,7 @@ public class IsolateSandbox implements Sandbox {
                 return checkerSystemError("Custom checker watchdog timed out", processResult.stderr());
             }
 
-            ExecutionResult checkerResult = parseMetaFile(metaFile, processResult.stdout(), processResult.stderr());
-            if (checkerResult.getStatus() == JudgeStatus.TIME_LIMIT_EXCEEDED) {
-                return checkerSystemError("Custom checker timed out", checkerResult.getStderr());
-            }
-            if (checkerResult.getStatus() == JudgeStatus.MEMORY_LIMIT_EXCEEDED) {
-                return checkerSystemError("Custom checker exceeded memory limit", checkerResult.getStderr());
-            }
-            if (checkerResult.getStatus() == JudgeStatus.OUTPUT_LIMIT_EXCEEDED) {
-                return checkerSystemError("Custom checker exceeded output limit", checkerResult.getStderr());
-            }
-
-            int exitCode = checkerResult.getExitCode();
-            if (exitCode == 0) {
-                return CheckResult.builder().status(JudgeStatus.ACCEPTED).build();
-            }
-            if (exitCode == 1) {
-                if (looksLikePythonCheckerRuntimeError(checkerResult.getStderr())) {
-                    return checkerSystemError("Custom checker runtime error", checkerResult.getStderr());
-                }
-                return CheckResult.builder()
-                        .status(JudgeStatus.WRONG_ANSWER)
-                        .message(firstNonBlank(checkerResult.getStdout(), checkerResult.getStderr(), "Custom checker rejected output"))
-                        .build();
-            }
-
-            return checkerSystemError("Custom checker failed with exit code " + exitCode, firstNonBlank(checkerResult.getStderr(), checkerResult.getStdout(), null));
+            return interpretPythonCheckerResult(parseMetaFile(metaFile, processResult.stdout(), processResult.stderr()));
         } catch (Exception e) {
             log.error("Error running custom checker", e);
             return checkerSystemError("Custom checker failed: " + e.getMessage(), null);
@@ -222,6 +197,88 @@ public class IsolateSandbox implements Sandbox {
             cleanup(boxId);
             deleteDirectory(workspace);
         }
+    }
+
+    CheckResult interpretPythonCheckerResult(ExecutionResult checkerResult) {
+        if (checkerResult == null) {
+            return checkerSystemError("Custom checker returned no result", null);
+        }
+        if (checkerResult.getStatus() == JudgeStatus.TIME_LIMIT_EXCEEDED) {
+            return checkerSystemError("Custom checker timed out", checkerResult.getStderr());
+        }
+        if (checkerResult.getStatus() == JudgeStatus.MEMORY_LIMIT_EXCEEDED) {
+            return checkerSystemError("Custom checker exceeded memory limit", checkerResult.getStderr());
+        }
+        if (checkerResult.getStatus() == JudgeStatus.OUTPUT_LIMIT_EXCEEDED) {
+            return checkerSystemError("Custom checker exceeded output limit", checkerResult.getStderr());
+        }
+
+        int exitCode = checkerResult.getExitCode();
+        Integer stdoutVerdict = parseStdoutVerdict(checkerResult.getStdout());
+        if (stdoutVerdict != null) {
+            if (stdoutVerdict == 1 && exitCode != 0) {
+                return checkerSystemError(
+                        "Custom checker printed ACCEPTED but exited with code " + exitCode,
+                        firstNonBlank(checkerResult.getStderr(), checkerResult.getStdout(), checkerResult.getMessage())
+                );
+            }
+            return stdoutVerdict == 1
+                    ? CheckResult.builder().status(JudgeStatus.ACCEPTED).build()
+                    : CheckResult.builder()
+                    .status(JudgeStatus.WRONG_ANSWER)
+                    .message(firstNonBlank(checkerResult.getStderr(), "Custom checker rejected output"))
+                    .build();
+        }
+
+        if (checkerResult.getStdout() != null && !checkerResult.getStdout().isBlank() && exitCode == 0) {
+            return checkerSystemError("Custom checker produced unsupported stdout verdict", checkerResult.getStdout());
+        }
+        if (checkerResult.getStatus() != JudgeStatus.ACCEPTED && exitCode != 1) {
+            return checkerSystemError(
+                    "Custom checker runtime error",
+                    firstNonBlank(checkerResult.getStderr(), checkerResult.getMessage())
+            );
+        }
+        if (exitCode == 0) {
+            return CheckResult.builder().status(JudgeStatus.ACCEPTED).build();
+        }
+        if (exitCode == 1) {
+            if (looksLikePythonCheckerRuntimeError(checkerResult.getStderr())) {
+                return checkerSystemError("Custom checker runtime error", checkerResult.getStderr());
+            }
+            return CheckResult.builder()
+                    .status(JudgeStatus.WRONG_ANSWER)
+                    .message(firstNonBlank(checkerResult.getStderr(), "Custom checker rejected output"))
+                    .build();
+        }
+
+        return checkerSystemError(
+                "Custom checker failed with exit code " + exitCode,
+                firstNonBlank(checkerResult.getStderr(), checkerResult.getStdout(), checkerResult.getMessage())
+        );
+    }
+
+    private Integer parseStdoutVerdict(String stdout) {
+        if (stdout == null || stdout.isBlank()) {
+            return null;
+        }
+
+        String[] lines = stdout.strip().split("\\R");
+        for (int index = lines.length - 1; index >= 0; index--) {
+            String line = lines[index].trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            String token = line.split("\\s+", 2)[0];
+            if ("1".equals(token)) {
+                return 1;
+            }
+            if ("0".equals(token)) {
+                return 0;
+            }
+            return null;
+        }
+        return null;
     }
 
     private void compileInIsolate(int boxId, LanguageProfile profile, Path sourceFile, Path artifactsDirectory) throws Exception {

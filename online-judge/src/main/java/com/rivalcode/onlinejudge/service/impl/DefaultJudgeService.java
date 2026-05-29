@@ -9,14 +9,17 @@ import com.rivalcode.onlinejudge.exception.CompilationFailedException;
 import com.rivalcode.onlinejudge.model.CheckResult;
 import com.rivalcode.onlinejudge.model.CompilationResult;
 import com.rivalcode.onlinejudge.model.ExecutionResult;
+import com.rivalcode.onlinejudge.model.ResolvedTestCase;
 import com.rivalcode.onlinejudge.service.Checker;
 import com.rivalcode.onlinejudge.service.JudgeService;
 import com.rivalcode.onlinejudge.service.Sandbox;
+import com.rivalcode.onlinejudge.service.TestCaseContentProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +30,7 @@ public class DefaultJudgeService implements JudgeService {
 
     private final Sandbox sandbox;
     private final Checker standardChecker;
+    private final TestCaseContentProvider testCaseContentProvider;
 
     @Value("${app.sandbox.default-time-limit-ms:2000}")
     private Long defaultTimeLimitMs = 2000L;
@@ -36,6 +40,12 @@ public class DefaultJudgeService implements JudgeService {
 
     @Value("${app.sandbox.default-output-limit-bytes:1048576}")
     private Long defaultOutputLimitBytes = 1048576L;
+
+    @Value("${app.judge.result-output-preview-bytes:8192}")
+    private int resultOutputPreviewBytes = 8192;
+
+    @Value("${app.judge.result-message-preview-bytes:4096}")
+    private int resultMessagePreviewBytes = 4096;
 
     @Override
     public JudgeResult judge(ComputingTask task, int boxId) {
@@ -66,7 +76,7 @@ public class DefaultJudgeService implements JudgeService {
             return JudgeResult.builder()
                     .submissionId(submissionId)
                     .overallStatus(JudgeStatus.COMPILATION_ERROR)
-                    .compilationError(e.getMessage())
+                    .compilationError(truncateUtf8(e.getMessage(), resultMessagePreviewBytes))
                     .build();
         } catch (Exception e) {
             log.error("System error while compiling submission {}", submissionId, e);
@@ -91,10 +101,11 @@ public class DefaultJudgeService implements JudgeService {
         boolean hasCustomChecker = task.getCustomCheckerCode() != null && !task.getCustomCheckerCode().isBlank();
 
         for (TestCase testCase : task.getTestCases()) {
+            ResolvedTestCase resolvedTestCase = testCaseContentProvider.resolve(testCase);
             ExecutionResult execResult = sandbox.run(
                     boxId,
                     compilation,
-                    testCase.getInput(),
+                    resolvedTestCase.input(),
                     timeLimitMs,
                     memoryLimitKb,
                     outputLimitBytes
@@ -104,8 +115,8 @@ public class DefaultJudgeService implements JudgeService {
             String message = execResult.getMessage();
             if (testStatus == JudgeStatus.ACCEPTED) {
                 CheckResult checkResult = hasCustomChecker
-                        ? sandbox.runPythonChecker(boxId, task.getCustomCheckerCode(), testCase.getInput(), testCase.getExpectedOutput(), execResult.getStdout())
-                        : standardChecker.check(testCase.getInput(), testCase.getExpectedOutput(), execResult.getStdout());
+                        ? sandbox.runPythonChecker(boxId, task.getCustomCheckerCode(), resolvedTestCase.input(), resolvedTestCase.expectedOutput(), execResult.getStdout())
+                        : standardChecker.check(resolvedTestCase.input(), resolvedTestCase.expectedOutput(), execResult.getStdout());
                 testStatus = checkResult.getStatus();
                 message = checkResult.getMessage();
             }
@@ -114,10 +125,8 @@ public class DefaultJudgeService implements JudgeService {
                     .status(testStatus)
                     .timeMs(execResult.getTimeMs())
                     .memoryKb(execResult.getMemoryKb())
-                    .input(testCase.getInput())
-                    .actualOutput(execResult.getStdout())
-                    .expectedOutput(testCase.getExpectedOutput())
-                    .message(message)
+                    .actualOutput(outputPreview(testStatus, execResult.getStdout()))
+                    .message(truncateUtf8(message, resultMessagePreviewBytes))
                     .build();
 
             results.add(testCaseResult);
@@ -163,8 +172,13 @@ public class DefaultJudgeService implements JudgeService {
             if (testCase == null) {
                 return "testCases[" + index + "] is required";
             }
-            if (testCase.getExpectedOutput() == null) {
-                return "testCases[" + index + "].expectedOutput is required";
+            if (testCase.getInputFile() == null || testCase.getInputFile().getObjectKey() == null
+                    || testCase.getInputFile().getObjectKey().isBlank()) {
+                return "testCases[" + index + "].inputFile.objectKey is required";
+            }
+            if (testCase.getExpectedOutputFile() == null || testCase.getExpectedOutputFile().getObjectKey() == null
+                    || testCase.getExpectedOutputFile().getObjectKey().isBlank()) {
+                return "testCases[" + index + "].expectedOutputFile.objectKey is required";
             }
         }
         if (isNotPositive(task.getTimeLimitMs())) {
@@ -187,7 +201,46 @@ public class DefaultJudgeService implements JudgeService {
         return JudgeResult.builder()
                 .submissionId(submissionId)
                 .overallStatus(JudgeStatus.SYSTEM_ERROR)
-                .compilationError(message)
+                .compilationError(truncateUtf8(message, resultMessagePreviewBytes))
                 .build();
+    }
+
+    private String outputPreview(JudgeStatus status, String stdout) {
+        if (status == JudgeStatus.ACCEPTED) {
+            return null;
+        }
+        return truncateUtf8(stdout, resultOutputPreviewBytes);
+    }
+
+    private String truncateUtf8(String value, int maxBytes) {
+        if (value == null || maxBytes <= 0) {
+            return null;
+        }
+        if (value.getBytes(StandardCharsets.UTF_8).length <= maxBytes) {
+            return value;
+        }
+
+        String suffix = "\n[truncated]";
+        int suffixBytes = suffix.getBytes(StandardCharsets.UTF_8).length;
+        int contentBudget = maxBytes - suffixBytes;
+        if (contentBudget <= 0) {
+            suffix = "";
+            contentBudget = maxBytes;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        int usedBytes = 0;
+        for (int offset = 0; offset < value.length(); ) {
+            int codePoint = value.codePointAt(offset);
+            String next = new String(Character.toChars(codePoint));
+            int nextBytes = next.getBytes(StandardCharsets.UTF_8).length;
+            if (usedBytes + nextBytes > contentBudget) {
+                break;
+            }
+            builder.append(next);
+            usedBytes += nextBytes;
+            offset += Character.charCount(codePoint);
+        }
+        return builder.append(suffix).toString();
     }
 }

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCase {
-    private String input;
-    private String expectedOutput;
+    private TestCaseFileRef inputFile;
+    private TestCaseFileRef expectedOutputFile;
 }

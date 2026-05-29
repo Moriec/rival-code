@@ -27,6 +27,7 @@ public class TestRunner {
 
     private final TestSubmissionService submissionService;
     private final ResultValidator validator;
+    private final TestDataGenerator testDataGenerator;
 
     private final AtomicInteger totalTests = new AtomicInteger(0);
     private final AtomicInteger passedTests = new AtomicInteger(0);
@@ -93,16 +94,16 @@ public class TestRunner {
     private List<TestData> generateTestCases() {
         List<TestData> testCases = new ArrayList<>();
 
-        testCases.add(TestDataGenerator.generateAcceptedJava());
-        testCases.add(TestDataGenerator.generateAcceptedCpp());
-        testCases.add(TestDataGenerator.generateAcceptedPython());
-        testCases.add(TestDataGenerator.generateAcceptedRust());
-        testCases.add(TestDataGenerator.generateAcceptedJavaScript());
-        testCases.add(TestDataGenerator.generateCompilationError());
-        testCases.add(TestDataGenerator.generateWrongAnswer());
-        testCases.add(TestDataGenerator.generateRuntimeError());
-        testCases.add(TestDataGenerator.generateTimeLimit());
-        testCases.add(TestDataGenerator.generateMemoryLimit());
+        testCases.add(testDataGenerator.generateAcceptedJava());
+        testCases.add(testDataGenerator.generateAcceptedCpp());
+        testCases.add(testDataGenerator.generateAcceptedPython());
+        testCases.add(testDataGenerator.generateAcceptedRust());
+        testCases.add(testDataGenerator.generateAcceptedJavaScript());
+        testCases.add(testDataGenerator.generateCompilationError());
+        testCases.add(testDataGenerator.generateWrongAnswer());
+        testCases.add(testDataGenerator.generateRuntimeError());
+        testCases.add(testDataGenerator.generateTimeLimit());
+        testCases.add(testDataGenerator.generateMemoryLimit());
 
         return testCases;
     }

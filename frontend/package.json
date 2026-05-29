@@ -1,0 +1,38 @@
+{
+  "name": "rivalcode-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 3000",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "@monaco-editor/react": "^4.7.0",
+    "@stomp/stompjs": "^7.1.1",
+    "@tanstack/react-query": "^5.90.11",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^6.0.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^8.0.14",
+    "vitest": "^4.1.7"
+  },
+  "overrides": {
+    "dompurify": "^3.4.6"
+  }
+}

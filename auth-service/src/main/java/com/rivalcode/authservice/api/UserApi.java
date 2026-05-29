@@ -15,7 +15,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -89,4 +91,13 @@ public interface UserApi {
     AvatarMetadata uploadAvatar(
             @Parameter(description = "Файл изображения (jpg, png и т.д.)", required = true)
             @RequestParam("file") MultipartFile file);
+
+    @GetMapping("/avatars/{avatarId}")
+    @Operation(summary = "Get avatar file")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Avatar image"),
+            @ApiResponse(responseCode = "404", description = "Avatar not found")
+    })
+    @SecurityRequirements({})
+    ResponseEntity<Resource> getAvatarFile(@PathVariable("avatarId") UUID avatarId);
 }

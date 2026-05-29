@@ -1,5 +1,7 @@
 package com.rivalcode.authservice.service;
 
+import com.rivalcode.authservice.exception.EntityNotFoundException;
+import com.rivalcode.authservice.model.AvatarContent;
 import com.rivalcode.authservice.model.AvatarMetadata;
 import com.rivalcode.authservice.repository.AvatarMetadataRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,5 +30,12 @@ public class AvatarService {
                 .active(false)
                 .build();
         return avatarMetadataRepository.save(metadata);
+    }
+
+    @Transactional(readOnly = true)
+    public AvatarContent getAvatarContent(UUID avatarId) {
+        AvatarMetadata metadata = avatarMetadataRepository.findById(avatarId)
+                .orElseThrow(() -> new EntityNotFoundException("Avatar not found"));
+        return new AvatarContent(metadata, minioService.getObject(metadata.getObjectKey()));
     }
 }

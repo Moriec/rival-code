@@ -5,13 +5,20 @@ import com.rivalcode.contracts.submissions.enums.ProgrammingLanguages;
 import com.rivalcode.contracts.submissions.model.ComputingTask;
 import com.rivalcode.contracts.submissions.model.TestCase;
 import com.rivalcode.contracts.submissions.model.UserCode;
+import com.rivalcode.tests.service.TestCaseObjectStorage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
 
+@Component
+@RequiredArgsConstructor
 public class TestDataGenerator {
 
-    public static TestData generateAcceptedJava() {
+    private final TestCaseObjectStorage testCaseObjectStorage;
+
+    public TestData generateAcceptedJava() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "public class Main {\n" +
                 "    public static void main(String[] args) {\n" +
@@ -26,7 +33,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVA)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(2000L)
                 .memoryLimitKb(65536L)
@@ -35,7 +42,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
     }
 
-    public static TestData generateAcceptedCpp() {
+    public TestData generateAcceptedCpp() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "#include <iostream>\n" +
                 "int main() {\n" +
@@ -50,7 +57,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.CPP)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(2000L)
                 .memoryLimitKb(65536L)
@@ -59,7 +66,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
     }
 
-    public static TestData generateCompilationError() {
+    public TestData generateCompilationError() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "public class Main {\n" +
                 "    public static void main(String[] args) {\n" +
@@ -74,7 +81,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVA)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("anything").build()
+                        testCase(submissionId, 1, "", "anything")
                 ))
                 .timeLimitMs(2000L)
                 .memoryLimitKb(65536L)
@@ -83,7 +90,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.COMPILATION_ERROR);
     }
 
-    public static TestData generateWrongAnswer() {
+    public TestData generateWrongAnswer() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "public class Main {\n" +
                 "    public static void main(String[] args) {\n" +
@@ -98,7 +105,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVA)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(2000L)
                 .memoryLimitKb(65536L)
@@ -107,7 +114,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.WRONG_ANSWER);
     }
 
-    public static TestData generateRuntimeError() {
+    public TestData generateRuntimeError() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "public class Main {\n" +
                 "    public static void main(String[] args) {\n" +
@@ -123,7 +130,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVA)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("anything").build()
+                        testCase(submissionId, 1, "", "anything")
                 ))
                 .timeLimitMs(2000L)
                 .memoryLimitKb(65536L)
@@ -132,7 +139,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.RUNTIME_ERROR);
     }
 
-    public static TestData generateTimeLimit() {
+    public TestData generateTimeLimit() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "public class Main {\n" +
                 "    public static void main(String[] args) {\n" +
@@ -147,7 +154,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVA)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("anything").build()
+                        testCase(submissionId, 1, "", "anything")
                 ))
                 .timeLimitMs(1000L)
                 .memoryLimitKb(65536L)
@@ -156,7 +163,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.TIME_LIMIT_EXCEEDED);
     }
 
-    public static TestData generateMemoryLimit() {
+    public TestData generateMemoryLimit() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "#include <vector>\n" +
                 "#include <iostream>\n" +
@@ -173,7 +180,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.CPP)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("anything").build()
+                        testCase(submissionId, 1, "", "anything")
                 ))
                 .timeLimitMs(5000L)
                 .memoryLimitKb(10000L)
@@ -182,7 +189,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.MEMORY_LIMIT_EXCEEDED);
     }
 
-    public static TestData generateAcceptedPython() {
+    public TestData generateAcceptedPython() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "print(42)";
 
@@ -193,7 +200,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.PYTHON)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(5000L)
                 .memoryLimitKb(65536L)
@@ -202,7 +209,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
     }
 
-    public static TestData generateAcceptedRust() {
+    public TestData generateAcceptedRust() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "fn main() { println!(\"42\"); }";
 
@@ -213,7 +220,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.RUST)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(5000L)
                 .memoryLimitKb(65536L)
@@ -222,7 +229,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
     }
 
-    public static TestData generateAcceptedRuby() {
+    public TestData generateAcceptedRuby() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "puts 42";
 
@@ -233,7 +240,7 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.RUBY)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(5000000L)
                 .memoryLimitKb(65536L)
@@ -242,7 +249,7 @@ public class TestDataGenerator {
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
     }
 
-    public static TestData generateAcceptedJavaScript() {
+    public TestData generateAcceptedJavaScript() {
         String submissionId = "test-" + UUID.randomUUID().toString().substring(0, 8);
         String code = "console.log(42)";
 
@@ -253,12 +260,16 @@ public class TestDataGenerator {
                         .language(ProgrammingLanguages.JAVASCRIPT)
                         .build())
                 .testCases(List.of(
-                        TestCase.builder().input("").expectedOutput("42").build()
+                        testCase(submissionId, 1, "", "42")
                 ))
                 .timeLimitMs(5000L)
                 .memoryLimitKb(65536L)
                 .build();
 
         return new TestData(submissionId, task, JudgeStatus.ACCEPTED);
+    }
+
+    private TestCase testCase(String submissionId, int index, String input, String expectedOutput) {
+        return testCaseObjectStorage.createTestCase(submissionId, index, input, expectedOutput);
     }
 }
