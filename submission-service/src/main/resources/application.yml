@@ -1,0 +1,52 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: submission-service
+  datasource:
+    url: jdbc:postgresql://localhost:5434/submission_db
+    username: submission_user
+    password: submission_pass
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: submission
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    schemas: submission
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  kafka:
+    submission-topic: submissions
+    result-topic: submission-results
+    result-group-id: submission-service
+    submission-events-topic: submission-events.v1
+    send-timeout-ms: 10000
+  problem-service:
+    base-url: http://localhost:8082
+  minio:
+    endpoint: http://localhost:9100
+    access-key: submission-reader
+    secret-key: submission-reader-secret
+    default-bucket: olimp-tests
+
+jwt:
+  access-token-secret: ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg==
+  issuer: rivalcode-auth
+
+rivalcode:
+  service:
+    name: submission-service
+    version: 1.0-SNAPSHOT
+
+logging:
+  level:
+    root: info
+    com.rivalcode: debug

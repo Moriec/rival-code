@@ -1,0 +1,7 @@
+**/target/
+**/node_modules/
+**/dist/
+**/.idea/
+**/.git/
+**/.DS_Store
+outputs/

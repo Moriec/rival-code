@@ -1,0 +1,54 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: duel-service
+  datasource:
+    url: jdbc:postgresql://localhost:5436/duel_db
+    username: duel_user
+    password: duel_pass
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: duel
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    schemas: duel
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: localhost:9092
+
+app:
+  kafka:
+    submission-events-topic: submission-events.v1
+    submission-events-group-id: duel-service
+    duel-events-topic: duel-events.v1
+    notification-commands-topic: notification-commands.v1
+    send-timeout-ms: 10000
+  problem-service:
+    base-url: http://localhost:8082
+  duel:
+    ticket-ttl-seconds: 300
+    default-rating: 1200
+    win-rating-delta: 25
+    matchmaking-delay-ms: 3000
+    rating-window-step-seconds: 30
+    rating-window-step-points: 50
+
+jwt:
+  access-token-secret: ZDRhYzY5ZjU3YjQwNjRiZDI5MzI1Njg3ZWIyMDA5M2I1ZjQ0ZDc3ZjA2YzE3ZjM2YzFiYjUyZTk0ZjI4YmY3Yg==
+  issuer: rivalcode-auth
+
+rivalcode:
+  service:
+    name: duel-service
+    version: 1.0-SNAPSHOT
+
+logging:
+  level:
+    root: info
+    com.rivalcode: debug
