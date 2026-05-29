@@ -18,15 +18,16 @@ RUN make isolate isolate-cg-keeper default.cf && \
 
 # --- Stage 2: Build Contracts and Application ---
 FROM maven:3.9.6-eclipse-temurin-21 AS app-builder
+ARG MAVEN_CLI_OPTS="-B -ntp -DskipTests -Dmaven.wagon.http.retryHandler.count=5 -Dmaven.wagon.http.retryHandler.requestSentEnabled=true -Dmaven.wagon.rto=120000 -Daether.connector.connectTimeout=60000 -Daether.connector.requestTimeout=120000"
 WORKDIR /build
 
 COPY contracts ./contracts
 COPY rivalcode-service-starter ./rivalcode-service-starter
 COPY online-judge ./online-judge
 
-RUN cd contracts && mvn clean install -DskipTests -q
-RUN cd rivalcode-service-starter && mvn clean install -DskipTests -q
-RUN cd online-judge && mvn clean package -DskipTests -q
+RUN --mount=type=cache,id=rivalcode-maven-repo,target=/root/.m2,sharing=locked cd contracts && mvn ${MAVEN_CLI_OPTS} clean install
+RUN --mount=type=cache,id=rivalcode-maven-repo,target=/root/.m2,sharing=locked cd rivalcode-service-starter && mvn ${MAVEN_CLI_OPTS} clean install
+RUN --mount=type=cache,id=rivalcode-maven-repo,target=/root/.m2,sharing=locked cd online-judge && mvn ${MAVEN_CLI_OPTS} clean package
 
 # --- Stage 3: Final Runtime Image ---
 FROM eclipse-temurin:21-jdk-jammy

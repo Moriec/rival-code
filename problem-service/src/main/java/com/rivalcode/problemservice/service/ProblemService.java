@@ -112,6 +112,38 @@ public class ProblemService {
                 .build();
     }
 
+    public ProblemExecutionContextDto getExecutionContext(UUID problemId, UUID problemVersionId) {
+        Problem problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
+
+        ProblemVersion version;
+        if (problemVersionId != null) {
+            version = problemVersionRepository.findById(problemVersionId)
+                    .filter(candidate -> problemId.equals(candidate.getProblemId()))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem version not found"));
+        } else {
+            version = problemVersionRepository.findByProblemIdAndActiveTrue(problem.getProblemId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No active version for problem"));
+        }
+
+        TestSuite testSuite = testSuiteRepository.findByProblemVersionId(version.getProblemVersionId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No test suite for problem version"));
+
+        return ProblemExecutionContextDto.builder()
+                .problemId(problem.getProblemId().toString())
+                .problemVersionId(version.getProblemVersionId().toString())
+                .checkerType(CheckerType.valueOf(version.getCheckerType()))
+                .limits(ProblemLimitsDto.builder()
+                        .timeLimitMs(version.getTimeLimitMs())
+                        .memoryLimitKb(version.getMemoryLimitKb())
+                        .outputLimitBytes(version.getOutputLimitBytes())
+                        .build())
+                .testArchiveObjectKey(testSuite.getObjectKey())
+                .visibleSampleTestsCount(testSuite.getVisibleSampleTestsCount())
+                .customCheckerObjectKey(version.getCustomCheckerObjectKey())
+                .build();
+    }
+
     @Transactional
     public ProblemDetailsDto createProblem(CreateProblemRequest request, UUID authorUserId) {
         if (problemRepository.findBySlugIgnoreCase(request.getSlug()).isPresent()) {

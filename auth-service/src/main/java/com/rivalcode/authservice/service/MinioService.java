@@ -54,4 +54,17 @@ public class MinioService {
             throw new ExternalServiceException("Failed to generate presigned URL", e);
         }
     }
+
+    public GetObjectResponse getObject(String objectKey) {
+        try {
+            return minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(objectKey)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new ExternalServiceException("Failed to read file from MinIO", e);
+        }
+    }
 }

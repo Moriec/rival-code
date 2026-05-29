@@ -93,6 +93,61 @@ class IsolateSandboxTest {
     }
 
     @Test
+    void shouldInterpretPythonCheckerStdoutOneAsAccepted() {
+        ExecutionResult checkerResult = ExecutionResult.builder()
+                .status(JudgeStatus.ACCEPTED)
+                .exitCode(0)
+                .stdout("1\n")
+                .build();
+
+        assertEquals(JudgeStatus.ACCEPTED, sandbox.interpretPythonCheckerResult(checkerResult).getStatus());
+    }
+
+    @Test
+    void shouldInterpretPythonCheckerStdoutZeroAsWrongAnswer() {
+        ExecutionResult checkerResult = ExecutionResult.builder()
+                .status(JudgeStatus.ACCEPTED)
+                .exitCode(0)
+                .stdout("0\n")
+                .build();
+
+        assertEquals(JudgeStatus.WRONG_ANSWER, sandbox.interpretPythonCheckerResult(checkerResult).getStatus());
+    }
+
+    @Test
+    void shouldUseLastPythonCheckerOutputLineAsVerdict() {
+        ExecutionResult checkerResult = ExecutionResult.builder()
+                .status(JudgeStatus.ACCEPTED)
+                .exitCode(0)
+                .stdout("debug\n1\n")
+                .build();
+
+        assertEquals(JudgeStatus.ACCEPTED, sandbox.interpretPythonCheckerResult(checkerResult).getStatus());
+    }
+
+    @Test
+    void shouldKeepLegacyPythonCheckerExitCodeFallbackWhenStdoutIsBlank() {
+        ExecutionResult checkerResult = ExecutionResult.builder()
+                .status(JudgeStatus.RUNTIME_ERROR)
+                .exitCode(1)
+                .stdout("")
+                .build();
+
+        assertEquals(JudgeStatus.WRONG_ANSWER, sandbox.interpretPythonCheckerResult(checkerResult).getStatus());
+    }
+
+    @Test
+    void shouldTreatUnsupportedPythonCheckerStdoutAsSystemError() {
+        ExecutionResult checkerResult = ExecutionResult.builder()
+                .status(JudgeStatus.ACCEPTED)
+                .exitCode(0)
+                .stdout("accepted\n")
+                .build();
+
+        assertEquals(JudgeStatus.SYSTEM_ERROR, sandbox.interpretPythonCheckerResult(checkerResult).getStatus());
+    }
+
+    @Test
     void shouldCopyAllJavaClassArtifacts(@TempDir Path tempDir) throws Exception {
         Path boxDir = Files.createDirectories(tempDir.resolve("box"));
         Path artifactsDir = Files.createDirectories(tempDir.resolve("artifacts"));

@@ -1,0 +1,65 @@
+services:
+  frontend:
+    environment:
+      VITE_API_BASE_URL: http://111.88.153.236:8080
+      VITE_WS_BASE_URL: ws://111.88.153.236:8080
+    ports:
+      - "3000:3000"
+
+  gateway-service:
+    environment:
+      APP_GATEWAY_CORS_ALLOWED_ORIGINS: http://111.88.153.236:3000,http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
+      APP_GATEWAY_CORS_ALLOWED_ORIGIN_PATTERNS: http://*:3000,http://*:5173
+    ports:
+      - "8080:8080"
+
+  test-online-judge:
+    profiles:
+      - diagnostic
+
+  online-judge:
+    privileged: true
+    security_opt:
+      - seccomp=unconfined
+      - apparmor=unconfined
+
+  kafka:
+    ports: !reset []
+
+  postgres-auth:
+    ports: !reset []
+
+  minio:
+    ports: !reset []
+
+  auth-service:
+    ports: !reset []
+
+  postgres-problem:
+    ports: !reset []
+
+  problem-service:
+    ports: !reset []
+
+  postgres-submission:
+    ports: !reset []
+
+  submission-service:
+    ports: !reset []
+
+  postgres-notification:
+    ports: !reset []
+
+  notification-service:
+    ports: !reset []
+
+  postgres-duel:
+    ports: !reset []
+
+  duel-service:
+    ports: !reset []
+
+  minio-online-judge:
+    ports: !reset []
+    volumes:
+      - ./deploy-data/minio-online-judge:/data

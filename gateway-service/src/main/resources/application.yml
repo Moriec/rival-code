@@ -1,0 +1,63 @@
+server:
+  port: 8080
+  max-http-request-header-size: 32KB
+
+spring:
+  application:
+    name: gateway-service
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      server:
+        webflux:
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 30s
+  http:
+    codecs:
+      max-in-memory-size: 2MB
+
+app:
+  gateway:
+    trace-header-name: X-Trace-Id
+    status-timeout-ms: 1500
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+        - http://localhost:5173
+        - http://127.0.0.1:3000
+        - http://127.0.0.1:5173
+      allowed-origin-patterns:
+        - http://*:3000
+        - http://*:5173
+    rate-limit:
+      enabled: true
+      requests-per-minute: 600
+    services:
+      auth:
+        http-uri: http://localhost:8081
+        ws-uri:
+      problem:
+        http-uri: http://localhost:8082
+        ws-uri:
+      submission:
+        http-uri: http://localhost:8083
+        ws-uri:
+      notification:
+        http-uri: http://localhost:8084
+        ws-uri:
+      duel:
+        http-uri: http://localhost:8085
+        ws-uri: ws://localhost:8085
+
+rivalcode:
+  service:
+    name: gateway-service
+    version: 1.0-SNAPSHOT
+    error-handling-enabled: false
+
+logging:
+  level:
+    root: info
+    com.rivalcode: debug

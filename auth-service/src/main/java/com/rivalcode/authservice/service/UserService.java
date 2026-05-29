@@ -12,7 +12,6 @@ import com.rivalcode.contracts.users.model.UpdateProfileRequest;
 import com.rivalcode.contracts.users.enums.UserRole;
 import com.rivalcode.authservice.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +21,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
     private final AvatarMetadataRepository avatarMetadataRepository;
     private final UserRoleRepository userRoleRepository;
-    private final MinioService minioService;
 
     public UserProfileDto getProfile(UUID userId) {
         User user = userRepository.findById(userId)
@@ -37,20 +34,10 @@ public class UserService {
         AvatarMetadata activeAvatar = avatarMetadataRepository.findByUserIdAndActiveTrue(userId).orElse(null);
         AvatarDto avatarDto = null;
         if (activeAvatar != null) {
-            String url = activeAvatar.getUrl();
-            if (url == null || url.isEmpty()) {
-                try {
-                    url = minioService.getPresignedUrl(activeAvatar.getObjectKey());
-                } catch (Exception e) {
-                    log.warn("Failed to generate presigned URL for avatar {} of user {}",
-                            activeAvatar.getAvatarId(), userId, e);
-                    url = null;
-                }
-            }
             avatarDto = AvatarDto.builder()
                     .avatarId(activeAvatar.getAvatarId().toString())
                     .objectKey(activeAvatar.getObjectKey())
-                    .url(url)
+                    .url("/api/users/avatars/" + activeAvatar.getAvatarId())
                     .contentType(activeAvatar.getContentType())
                     .sizeBytes(activeAvatar.getSizeBytes())
                     .uploadedAt(activeAvatar.getUploadedAt())

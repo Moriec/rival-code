@@ -225,11 +225,14 @@ Recommended STOMP routes:
 - `CreateSubmissionRequest`: `userId`, `problemId`, `problemVersionId`, optional `duelId`, `mode`, `userCode`.
 - `SubmissionCreatedResponse`: `submissionId`, `status`, `createdAt`.
 - `ComputingTask`: `submissionId`, `userCode`, `testCases`, limits, optional custom checker code.
+- `TestCase`: contains MinIO refs `inputFile` and `expectedOutputFile`, not raw `input` / `expectedOutput` strings.
 - `JudgeResult`: полный internal result от judge.
 - `PublicSubmissionVerdict`: публичная модель для UI.
 - `SubmissionEvaluatedEvent`: безопасное событие без input/expected output скрытых тестов.
 
 ### Data Rules
+
+- Kafka topic `submissions` must not carry large test input/output bodies; it carries only MinIO object refs.
 
 - Полный `JudgeResult` можно хранить внутри `submission-service`.
 - Rated UI никогда не получает `TestCaseResult.input`, `expectedOutput`, `actualOutput` для hidden tests.

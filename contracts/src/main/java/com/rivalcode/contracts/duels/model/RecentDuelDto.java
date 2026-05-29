@@ -2,6 +2,7 @@ package com.rivalcode.contracts.duels.model;
 
 import com.rivalcode.contracts.duels.enums.DuelMode;
 import com.rivalcode.contracts.duels.enums.DuelOutcome;
+import com.rivalcode.contracts.problems.enums.ProblemDifficulty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class RecentDuelDto {
     private String opponentUsername;
     private String problemId;
     private String problemTitle;
+    private ProblemDifficulty problemDifficulty;
     private DuelMode mode;
     private DuelOutcome outcome;
     private Integer ratingDelta;
