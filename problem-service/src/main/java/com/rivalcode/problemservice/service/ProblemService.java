@@ -7,6 +7,8 @@ import com.rivalcode.contracts.problems.enums.ProblemDifficulty;
 import com.rivalcode.contracts.problems.enums.ProblemStatus;
 import com.rivalcode.contracts.problems.model.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -64,6 +66,7 @@ public class ProblemService {
         return page.map(this::toSummaryDto);
     }
 
+    @Cacheable(value = "problemDetails", key = "#problemId")
     public ProblemDetailsDto getProblemDetails(UUID problemId) {
         Problem problem = problemRepository.findById(problemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));
@@ -145,6 +148,7 @@ public class ProblemService {
     }
 
     @Transactional
+    @CacheEvict(value = {"problemDetails", "tags"}, allEntries = true)
     public ProblemDetailsDto createProblem(CreateProblemRequest request, UUID authorUserId) {
         if (problemRepository.findBySlugIgnoreCase(request.getSlug()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Slug already exists");
@@ -206,6 +210,7 @@ public class ProblemService {
     }
 
     @Transactional
+    @CacheEvict(value = {"problemDetails", "tags"}, allEntries = true)
     public ProblemDetailsDto updateProblem(UUID problemId, UpdateProblemRequest request) {
         Problem problem = problemRepository.findById(problemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Problem not found"));

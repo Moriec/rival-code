@@ -4,14 +4,15 @@ import com.rivalcode.problemservice.service.DuelProblemSelector;
 import com.rivalcode.problemservice.service.ProblemService;
 import com.rivalcode.contracts.problems.model.DuelProblemSelectionRequest;
 import com.rivalcode.contracts.problems.model.DuelProblemSelectionResponse;
+import io.swagger.v3.oas.annotations.Hidden;
 import com.rivalcode.contracts.problems.model.ProblemExecutionContextDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.UUID;
 
+@Hidden
 @RestController
 @RequestMapping("/internal/problems")
 @RequiredArgsConstructor

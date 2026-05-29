@@ -4,6 +4,8 @@ import com.rivalcode.problemservice.model.Tag;
 import com.rivalcode.problemservice.repository.TagRepository;
 import com.rivalcode.contracts.problems.model.TagDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ public class TagService {
 
     private final TagRepository tagRepository;
 
+    @Cacheable("tags")
     public List<TagDto> getAllTags() {
         return tagRepository.findAll().stream()
                 .map(this::toDto)
@@ -26,6 +29,7 @@ public class TagService {
     }
 
     @Transactional
+    @CacheEvict(value = {"tags", "problemList"}, allEntries = true)
     public TagDto createTag(TagDto dto) {
         if (tagRepository.findByNameIgnoreCase(dto.getName()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tag already exists");

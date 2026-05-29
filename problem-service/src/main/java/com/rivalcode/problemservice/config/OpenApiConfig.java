@@ -18,13 +18,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("RivalCode Problem Service")
                         .version("1.0")
-                        .description("""
-                                Problem archive service.
-                                
-                                Public API exposes problem list, problem details and tags.
-                                Admin API manages problems, tags and uploaded problem files.
-                                Internal API exposes execution context for submission-service and duel problem selection.
-                                """))
+                        .description("Сервис архива задач"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
@@ -33,6 +27,6 @@ public class OpenApiConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description("Access token from auth-service")));
+                                        .description("Вставьте JWT токен")));
     }
 }

@@ -20,6 +20,15 @@ spring:
     schemas: problem
     locations: classpath:db/migration
     placeholder-replacement: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+    cache:
+      type: redis
+      redis:
+        time-to-live: 600000
 
 minio:
   endpoint: http://localhost:9000
@@ -45,4 +54,7 @@ logging:
     com.rivalcode: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+
+springdoc:
+  default-flat-param-object: true
 
